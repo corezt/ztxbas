@@ -1,0 +1,7 @@
+# For a local (in-repo) run against the SDK in ../../sdk-python:
+#   pip install -e ../../sdk-python
+#
+# For a run against the published SDK:
+#   pip install -r requirements.txt
+
+ztxbas>=1.0.0

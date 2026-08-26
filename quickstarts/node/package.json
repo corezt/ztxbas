@@ -1,0 +1,17 @@
+{
+  "name": "ztxbas-quickstart-node",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/quickstart.js"
+  },
+  "dependencies": {
+    "@corezt/ztxbas": "file:../../sdk-node"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  }
+}

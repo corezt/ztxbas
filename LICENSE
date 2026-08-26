@@ -1,0 +1,178 @@
+# ZTXBAS End-User License Agreement
+
+**Version 1.1**
+
+Copyright © CoreZT. All rights reserved.
+
+**IMPORTANT — READ CAREFULLY.** This End-User License Agreement
+("EULA") is a legal agreement between you (either an individual or an
+entity; "you") and CoreZT ("CoreZT", "we", "us") governing your use of
+the ZTXBAS software, including the server binary, container images,
+admin console, command-line tools, and accompanying documentation
+(collectively, the "Software"). It does not cover the ZTXBAS software
+development kits (SDKs) or the sample code in the ZTXBAS repository,
+which are provided under the Apache License 2.0.
+
+By installing, running, or otherwise using the Software, you
+acknowledge that you have read this EULA, understand it, and agree to
+be bound by its terms. If you are accepting on behalf of an entity, you
+represent that you have authority to bind that entity. If you do not
+agree, do not install, run, or use the Software.
+
+## 1. License grant
+
+Subject to your continuous compliance with this EULA, CoreZT grants you
+a worldwide, non-exclusive, non-transferable, non-sublicensable,
+royalty-free license to install, run, and use the Software for your
+internal business purposes or personal use, including production use,
+for as long as this EULA remains in force.
+
+The Software is provided at no cost. This EULA does not entitle you to
+any fee, refund, credit, or other consideration.
+
+## 2. Redistribution
+
+You may redistribute the unmodified Software (container images,
+released binaries, and accompanying documentation) through your own
+mirrors, internal registries, or artifact repositories, provided that:
+
+- the Software is redistributed unmodified, complete with this EULA and
+  all copyright and proprietary notices intact;
+- redistribution is at no charge to the recipient; and
+- redistribution is not part of a commercial offering whose marketed
+  function includes user authentication, access control, identity
+  verification, or a similar capability provided by the Software.
+
+Bundling, integrating, or embedding the Software as a component of a
+paid product, hosted service (SaaS, managed service, PaaS, or
+otherwise), or appliance whose commercial value depends materially on
+the Software's functionality requires a separate written agreement with
+CoreZT.
+
+## 3. Restrictions
+
+Except as expressly permitted by this EULA or by mandatory applicable
+law that cannot be excluded by agreement, you will not, and will not
+permit any third party to:
+
+- reverse engineer, decompile, disassemble, or otherwise attempt to
+  derive the source code, underlying ideas, algorithms, file formats,
+  wire protocols, or interface protocols of the Software, except to the
+  limited extent such activity is expressly permitted by applicable law
+  notwithstanding this restriction;
+- modify, adapt, translate, or create derivative works of the Software;
+- remove, obscure, or alter any proprietary notices, labels, marks, or
+  attributions on the Software, its container images, or its
+  documentation;
+- use the CoreZT name, ZTXBAS name, or any CoreZT trademarks to
+  endorse, promote, or imply an affiliation with a derivative product,
+  service, or offering without CoreZT's prior written consent; or
+- use the Software in violation of any applicable law or regulation,
+  including export control and sanctions laws.
+
+## 4. Ownership
+
+The Software is licensed, not sold. CoreZT and its licensors retain all
+right, title, and interest in and to the Software, including all
+intellectual property rights therein. All rights not expressly granted
+to you under this EULA are reserved by CoreZT.
+
+## 5. Third-party components
+
+The Software incorporates third-party open-source components subject to
+their own license terms.
+
+## 6. No support, updates, or maintenance obligation
+
+CoreZT is not obligated to provide any updates, upgrades, bug fixes,
+patches, technical support, or maintenance for the Software. Where
+CoreZT does provide such items — for example, by publishing new
+versions to its container registry or release page — those items are
+part of the Software and are governed by this EULA (or, if newer, the
+version of this EULA distributed with them).
+
+The version of the Software you have installed continues to be governed
+by the version of this EULA it was distributed with; you are not
+required to accept a newer EULA in order to continue running an
+installed version, but you may be required to accept a newer EULA in
+order to install or run a newer version.
+
+## 7. Data collection
+
+The Software does not transmit telemetry, usage data, license-check
+information, or any other data to CoreZT or to any third party as part
+of its normal operation. All operational data — including audit logs,
+admin actions, user records, and cryptographic keys — remains on the
+systems on which you run the Software.
+
+## 8. Disclaimer of warranties
+
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITH ALL FAULTS
+AND WITHOUT WARRANTY OF ANY KIND. TO THE MAXIMUM EXTENT PERMITTED BY
+APPLICABLE LAW, COREZT DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS,
+IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING ANY IMPLIED WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND
+NON-INFRINGEMENT, AND ANY WARRANTIES ARISING FROM COURSE OF DEALING OR
+USAGE OF TRADE. COREZT DOES NOT WARRANT THAT THE SOFTWARE WILL BE
+UNINTERRUPTED, ERROR-FREE, OR SECURE, OR THAT IT WILL MEET YOUR
+REQUIREMENTS.
+
+## 9. Limitation of liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT WILL
+COREZT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+CONSEQUENTIAL, OR EXEMPLARY DAMAGES, OR FOR ANY LOSS OF PROFITS,
+REVENUE, DATA, GOODWILL, OR BUSINESS INTERRUPTION, ARISING OUT OF OR
+RELATED TO THIS EULA OR THE SOFTWARE, HOWEVER CAUSED AND UNDER ANY
+THEORY OF LIABILITY, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGES. BECAUSE THE SOFTWARE IS PROVIDED AT NO CHARGE, COREZT'S TOTAL
+AGGREGATE LIABILITY ARISING OUT OF OR RELATED TO THIS EULA OR THE
+SOFTWARE WILL NOT EXCEED FIFTY UNITED STATES DOLLARS (US$50). THE
+FOREGOING LIMITATIONS APPLY NOTWITHSTANDING THE FAILURE OF ESSENTIAL
+PURPOSE OF ANY LIMITED REMEDY.
+
+## 10. Export and government use
+
+You will comply with all applicable export control and sanctions laws
+and will not export, re-export, or use the Software in violation of
+such laws. The Software is "commercial computer software"; any use,
+duplication, or disclosure by a government end user is subject to the
+restrictions of this EULA.
+
+## 11. Term and termination
+
+This EULA is effective on your first use of the Software and continues
+until terminated. Your rights under it will terminate automatically and
+without notice from CoreZT if you fail to comply with any of its terms.
+On termination you must cease all use of the Software and destroy all
+copies in your possession or control. Sections 3 through 12 survive
+termination.
+
+## 12. General
+
+**Entire agreement.** This EULA constitutes the entire agreement
+between you and CoreZT regarding the Software and supersedes all prior
+or contemporaneous understandings on that subject.
+
+**Updates.** CoreZT may update this EULA for new versions or releases
+of the Software. The version of this EULA distributed with a given
+release governs that release.
+
+**Severability.** If any provision of this EULA is held unenforceable,
+it will be modified to the minimum extent necessary to make it
+enforceable, and the remaining provisions will remain in full force.
+
+**Waiver.** CoreZT's failure to enforce any right under this EULA is
+not a waiver of that right.
+
+**Assignment.** You may not assign this EULA without CoreZT's prior
+written consent; any prohibited assignment is void. CoreZT may assign
+this EULA freely.
+
+**Governing law.** This EULA is governed by the laws of the
+jurisdiction in which CoreZT is incorporated, without regard to its
+conflict-of-laws principles.
+
+---
+
+*Contact: support@corezt.com*

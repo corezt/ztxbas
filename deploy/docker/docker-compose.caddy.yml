@@ -1,0 +1,55 @@
+# Overlay that adds Caddy in front of ztxbas for automatic TLS via
+# Let's Encrypt. Compose merges this on top of docker-compose.yml.
+#
+# Prerequisites:
+#   - A DNS A/AAAA record for your hostname pointed at this host.
+#   - Ports 80 and 443 open on the public interface (for ACME + TLS).
+#   - A local ./Caddyfile derived from Caddyfile.example.
+#
+# Start:
+#   docker compose \
+#     -f deploy/docker/docker-compose.yml \
+#     -f deploy/docker/docker-compose.caddy.yml \
+#     up -d
+
+services:
+  ztxbas:
+    # HTTP ports go behind Caddy on the compose network — drop the host
+    # loopback binds. The mobile UDP port stays published on the host
+    # (0.0.0.0:9443/udp) because enrolled devices talks over UDP transport;
+    # Caddy is HTTP-only and cannot reverse-proxy this framing.
+    # ZTXBAS_ALLOW_INSECURE_CONSOLE=1 is inherited from docker-compose.yml.
+    ports:
+      - "9443:9443/udp"
+    environment:
+      ZTXBAS_PUBLIC_URL: "https://ztxbas.example.com"
+      # Trust the caddy container's network so client IPs are logged
+      # correctly for admin rate limiting and audit trails.
+      ZTXBAS_TRUSTED_PROXIES: "172.16.0.0/12"
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: ztxbas-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"     # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - ztxbas
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE  # bind :80 and :443 as non-root
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  caddy-data:
+    driver: local
+  caddy-config:
+    driver: local

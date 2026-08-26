@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ztxbas"
+version = "1.0.0"
+description = "Official Python SDK for ZTXBAS — Zero-Trust Biometric Authentication Server."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.9"
+authors = [{ name = "CoreZT" }]
+keywords = ["ztxbas", "biometric", "authentication", "mfa", "zero-trust", "corezt"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+]
+dependencies = [
+    "cryptography>=41.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+[project.urls]
+Homepage = "https://corezt.com/docs/ztxbas"
+Repository = "https://github.com/corezt/ztxbas"
+
+[tool.setuptools.packages.find]
+include = ["ztxbas*"]
+exclude = ["tests*"]

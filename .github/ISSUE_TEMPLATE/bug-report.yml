@@ -1,0 +1,91 @@
+name: Server bug report
+description: Reproducible bug in the ZTXBAS server, admin console, or CLI.
+title: "[bug] "
+labels: ["bug", "server"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report. Before opening an issue,
+        please check that:
+
+        - You've searched existing issues for a duplicate.
+        - You are not reporting a **security vulnerability** — those go to
+          `support@corezt.com` per [SECURITY.md](../SECURITY.md), not here.
+        - This is a bug in the server itself, not integration debugging in
+          your relying-party app (use the SDK bug template for SDK issues).
+
+  - type: input
+    id: version
+    attributes:
+      label: ZTXBAS version
+      description: Output of `docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.version" }}' <image>` or `ztxbas --version`.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deploy
+    attributes:
+      label: Deployment shape
+      options:
+        - docker run
+        - docker compose (with Caddy)
+        - docker compose (bare)
+        - Kubernetes
+        - Other (describe below)
+    validations:
+      required: true
+
+  - type: input
+    id: platform
+    attributes:
+      label: Host OS / architecture
+      placeholder: "Ubuntu 24.04, amd64"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal, deterministic steps from a clean start. If you can reproduce with the quickstart, say so.
+      placeholder: |
+        1. `docker run --rm -p 8443:8443 ghcr.io/corezt/ztxbas:1.0.0`
+        2. Create application X with …
+        3. Call endpoint Y with …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Container/journal logs around the failure. Redact anything sensitive (HMAC secrets, tokens, email addresses).
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmations
+      options:
+        - label: I have searched existing issues.
+          required: true
+        - label: This is not a security vulnerability (those go to `support@corezt.com`).
+          required: true
+        - label: I have redacted secrets from logs and repro steps.
+          required: true

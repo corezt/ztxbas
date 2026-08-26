@@ -1,0 +1,81 @@
+name: SDK bug report
+description: Reproducible bug in the Go, Node/TypeScript, or Python SDK.
+title: "[sdk] "
+labels: ["bug", "sdk"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For bugs in one of the three official SDKs. Integration-shape
+        problems ("my Express app doesn't verify the JWT") should first be
+        traced against the quickstart before filing — a minimal repro
+        makes SDK bugs an order of magnitude faster to fix.
+
+  - type: dropdown
+    id: sdk
+    attributes:
+      label: Which SDK
+      options:
+        - Go (`github.com/corezt/ztxbas/sdk-go`)
+        - Node/TypeScript (`@corezt/ztxbas`)
+        - Python (`ztxbas`)
+    validations:
+      required: true
+
+  - type: input
+    id: sdk_version
+    attributes:
+      label: SDK version
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: runtime
+    attributes:
+      label: Language runtime version
+      placeholder: "go 1.22 / node 20.11 / python 3.12"
+    validations:
+      required: true
+
+  - type: input
+    id: server_version
+    attributes:
+      label: ZTXBAS server version the SDK is talking to
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: A snippet or a link to a small repro repo. If the quickstart reproduces it, say so.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior (error message, stack trace)
+      render: text
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmations
+      options:
+        - label: I have searched existing issues.
+          required: true
+        - label: This reproduces against the quickstart, or I have a minimal repro.
+          required: true

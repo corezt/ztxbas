@@ -1,0 +1,80 @@
+# ZTXBAS — minimal docker-compose recipe.
+#
+# What this gives you:
+#   - ztxbas listening on 127.0.0.1:8443 (public API) and 127.0.0.1:8080 (console)
+#   - mailhog for capturing outbound enrollment emails (127.0.0.1:8025 UI)
+#   - a named volume for the SQLite DB + JWT signing key
+#
+# What this does NOT give you:
+#   - TLS. Public deployments MUST front this with a reverse proxy (see
+#     docker-compose.caddy.yml overlay) or terminate TLS in ztxbas itself
+#     by setting ZTXBAS_TLS_CERT / ZTXBAS_TLS_KEY.
+#
+# Start:
+#   docker compose -f deploy/docker/docker-compose.yml up -d
+#   podman-compose -f deploy/docker/docker-compose.yml up -d
+#
+# First-boot admin password is printed on stdout — check the logs:
+#   docker compose -f deploy/docker/docker-compose.yml logs ztxbas | grep -i 'breakglass'
+
+services:
+  ztxbas:
+    image: ghcr.io/corezt/ztxbas:latest
+    container_name: ztxbas
+    restart: unless-stopped
+    # Loopback binds for the HTTP ports by default. Change to "8443:8443"
+    # only if a reverse proxy is not being used and you understand you are
+    # exposing raw HTTP. The mobile UDP port publishes on 0.0.0.0 because
+    # enrolled devices need to reach it from off-host.
+    ports:
+      - "127.0.0.1:8443:8443"
+      - "127.0.0.1:8080:8080"
+      - "9443:9443/udp"
+    environment:
+      ZTXBAS_PUBLIC_URL: "http://127.0.0.1:8443"
+      ZTXBAS_SMTP_HOST: "mailhog"
+      ZTXBAS_SMTP_PORT: "1025"
+      ZTXBAS_SMTP_FROM: "ztxbas@example.com"
+      ZTXBAS_SMTP_USER: "REPLACE_ME"
+      ZTXBAS_SMTP_PASS: "REPLACE_ME"
+      # Console must bind to 0.0.0.0 inside the container for the compose
+      # port mapping above to reach it. It is still only exposed on the
+      # host's loopback (127.0.0.1:8080) via the ports: mapping, and — in
+      # the Caddy overlay — behind Caddy inside the compose network.
+      ZTXBAS_CONSOLE_LISTEN_ADDR: "0.0.0.0:8080"
+      # Acknowledge to the startup fail-safe that binding the console to
+      # 0.0.0.0 without TLS is intentional here. Safe in this compose
+      # because the host publishes the port on loopback only (or, with the
+      # Caddy overlay, does not publish it at all).
+      ZTXBAS_ALLOW_INSECURE_CONSOLE: "1"
+      # Trust the container gateway so the compose port-forward chain sees
+      # the correct client IP for admin rate limiting and audit logs.
+      ZTXBAS_TRUSTED_PROXIES: "172.16.0.0/12,10.0.0.0/8,192.168.0.0/16"
+    volumes:
+      - ztxbas-data:/var/lib/ztxbas
+    depends_on:
+      - mailhog
+    # No added capabilities
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: ztxbas-mailhog
+    restart: unless-stopped
+    ports:
+      # 1025 = SMTP (used by ztxbas), 8025 = web UI (bind to loopback)
+      - "127.0.0.1:8025:8025"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  ztxbas-data:
+    driver: local

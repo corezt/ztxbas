@@ -1,0 +1,18 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/corezt/ztxbas/blob/main/SECURITY.md
+    about: >
+      Do NOT open a public issue. Email support@corezt.com — details and
+      response SLA in SECURITY.md.
+  - name: Commercial support, SLA, RBAC, SSO, SCIM, MDM, SIEM
+    url: https://corezt.com/ztxgate
+    about: >
+      These are ZTXGate features, not ZTXBAS. Same mobile app, superset of
+      the crypto backend.
+  - name: Deployment or integration help
+    url: https://corezt.com/docs/ztxbas
+    about: >
+      Environment-specific debugging ("my Caddy config", "my Express app
+      doesn't verify") is not tracked as an issue — start from the docs
+      and the quickstarts.

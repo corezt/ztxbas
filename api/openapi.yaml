@@ -1,0 +1,427 @@
+openapi: 3.1.0
+info:
+  title: ZTXBAS Public API
+  version: 1.0.0
+  summary: Zero-Trust Biometric Authentication Server — public v1 surface.
+  description: |
+    ZTXBAS is a small, self-hosted service that mints short-lived,
+    origin-bound JWT identity assertions after a user approves a
+    biometric push on their mobile device.
+
+    All endpoints under `/v1/*` require HMAC-SHA256 request signing.
+    `/health` and `/.well-known/jwks.json` are unauthenticated.
+
+    See `docs/concepts/hmac-signing.md` for the exact canonical form.
+  contact:
+    name: CoreZT
+    url: https://corezt.com/docs/ztxbas
+  license:
+    name: CoreZT EULA (server) — Apache-2.0 (SDKs)
+    url: https://github.com/corezt/ztxbas/blob/main/LICENSE
+
+servers:
+  - url: https://ztxbas.example.com
+    description: Self-hosted ztxbas instance.
+
+tags:
+  - name: users
+    description: Enrolled end-user identities.
+  - name: origins
+    description: Origins your application is allowed to request authentication for.
+  - name: auth
+    description: Challenge creation and status polling.
+  - name: keys
+    description: Public keys for verifying ztxbas-issued JWTs.
+  - name: health
+    description: Liveness.
+
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Liveness probe.
+      description: Always returns 200 while the process is alive. No license gate.
+      security: []
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [ok] }
+
+  /.well-known/jwks.json:
+    get:
+      tags: [keys]
+      summary: JSON Web Key Set for JWT verification.
+      description: |
+        Returns the public keys ztxbas signs JWTs with. Cache for at least
+        5 minutes (`Cache-Control: public, max-age=300`); refresh when the
+        `kid` on an incoming JWT is not in your cache.
+      security: []
+      responses:
+        "200":
+          description: JWKS document.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JWKS"
+
+  /v1/users:
+    post:
+      tags: [users]
+      summary: Register (enroll) a user.
+      description: |
+        Creates a user row and triggers the enrollment email/QR flow.
+        The user is marked `enrolled=false` until the mobile
+        app completes device enrollment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUserRequest"
+      responses:
+        "201":
+          description: User created; enrollment email dispatched.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "409":
+          description: Email already registered.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "500": { $ref: "#/components/responses/Internal" }
+    get:
+      tags: [users]
+      summary: List users.
+      responses:
+        "200":
+          description: All users for the caller's tenant.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/Internal" }
+    delete:
+      tags: [users]
+      summary: Deregister a user.
+      description: |
+        Deletes the user row and revokes any device enrollment. The email
+        is passed in the request body (not the path) so RPs do not have to
+        percent-encode arbitrary user input into the HMAC canonical form.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "204": { description: Deleted. }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/Internal" }
+
+  /v1/origins:
+    post:
+      tags: [origins]
+      summary: Register an origin.
+      description: |
+        An origin is a `scheme://host[:port]` your application is allowed
+        to request challenges for. It is shown to the user on their phone
+        as `display_name` so they can visually confirm the site they are
+        authenticating to.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterOriginRequest"
+      responses:
+        "201":
+          description: Origin registered (idempotent — re-register updates display name).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Origin" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/Internal" }
+    get:
+      tags: [origins]
+      summary: List origins.
+      responses:
+        "200":
+          description: All origins registered for this application.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  origins:
+                    type: array
+                    items: { $ref: "#/components/schemas/Origin" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/Internal" }
+
+  /v1/origins/{id}:
+    delete:
+      tags: [origins]
+      summary: Delete an origin.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/Internal" }
+
+  /v1/auth/challenge:
+    post:
+      tags: [auth]
+      summary: Create an authentication challenge.
+      description: |
+        Creates a challenge, pushes a biometric-approval prompt to the
+        user's enrolled device, and returns the challenge id. Poll
+        `GET /v1/auth/status/{challenge_id}` to retrieve the JWT on
+        approval.
+
+        The `origin` MUST already be registered (`POST /v1/origins`);
+        otherwise the request is rejected with 403 `UNREGISTERED_ORIGIN`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateChallengeRequest"
+      responses:
+        "201":
+          description: Challenge created and push dispatched.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreateChallengeResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403":
+          description: Origin not registered for this application.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: User not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "500": { $ref: "#/components/responses/Internal" }
+
+  /v1/auth/status/{challenge_id}:
+    get:
+      tags: [auth]
+      summary: Get challenge status.
+      description: |
+        Returns the terminal or in-flight state of a challenge.
+
+        On `approved`, the response includes a short-lived (5 min) ES256
+        JWT bound to the origin and user. Verify it against
+        `/.well-known/jwks.json` before trusting the identity claim.
+
+        Terminal states (`approved`, `denied`, `expired`) are sticky —
+        subsequent polls return the same result until the challenge is
+        swept.
+      parameters:
+        - name: challenge_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Current challenge state.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StatusResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/Internal" }
+
+components:
+  securitySchemes:
+    HMAC:
+      type: apiKey
+      in: header
+      name: X-Signature
+      description: |
+        HMAC-SHA256 request signing. Every `/v1/*` request MUST carry four
+        headers:
+
+          * `X-Application-ID` — the application id issued at app creation.
+          * `X-Timestamp`      — Unix seconds; must be within ±300s of server clock.
+          * `X-Nonce`          — a random string, unique per request (recommend 32 hex chars).
+          * `X-Signature`      — `hex(HMAC-SHA256(secret, canonical))`.
+
+        Canonical form (single line, no trailing newline):
+
+            METHOD "|" PATH "|" TIMESTAMP "|" NONCE "|" BODY
+
+        where `BODY` is the raw request bytes (empty string for GET/DELETE
+        with no body). Body size is capped at 8 KiB.
+
+  parameters: {}
+
+  responses:
+    BadRequest:
+      description: Malformed request.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: Missing or invalid HMAC.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Resource does not exist.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Internal:
+      description: Unexpected server error.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code (e.g. UNREGISTERED_ORIGIN).
+        message:
+          type: string
+          description: Human-readable explanation.
+
+    RegisterUserRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        external_id:
+          type: string
+          description: Opaque identifier from the RP's own user store.
+
+    User:
+      type: object
+      required: [id, email, enrolled]
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        external_id: { type: string }
+        enrolled:
+          type: boolean
+          description: True once the user's mobile device has completed enrollment.
+
+    RegisterOriginRequest:
+      type: object
+      required: [origin, display_name]
+      properties:
+        origin:
+          type: string
+          description: |
+            `scheme://host[:port]`. Normalized server-side (lowercased host,
+            default ports stripped). https and http are both accepted;
+            production RPs should always use https.
+          examples: ["https://app.example.com"]
+        display_name:
+          type: string
+          description: Human-friendly label shown on the mobile prompt.
+          examples: ["Example Console"]
+
+    Origin:
+      type: object
+      required: [id, origin, origin_hash, display_name]
+      properties:
+        id: { type: string }
+        origin: { type: string, description: Canonical (normalized) origin URL. }
+        origin_hash: { type: string, description: SHA-256 hex of the canonical origin — used for storage & log correlation. }
+        display_name: { type: string }
+
+    CreateChallengeRequest:
+      type: object
+      required: [user_email, origin]
+      properties:
+        user_email: { type: string, format: email }
+        origin:
+          type: string
+          description: Must exactly match (post-normalization) a registered origin.
+
+    CreateChallengeResponse:
+      type: object
+      required: [challenge_id, expires_in, origin_display, origin_url]
+      properties:
+        challenge_id: { type: string }
+        expires_in:
+          type: integer
+          description: Seconds until the challenge expires if not approved.
+        origin_display: { type: string, description: The display_name the user sees on their phone. }
+        origin_url: { type: string, description: The canonical origin URL bound into the challenge. }
+
+    StatusResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [pending, approved, denied, expired]
+        user_email:
+          type: string
+          format: email
+          description: Present once the challenge has left `pending`.
+        jwt:
+          type: string
+          description: |
+            ES256 JWT identity assertion. Present only when `status=approved`.
+            Verify against `/.well-known/jwks.json`. Contains `iss`, `sub`
+            (email), `aud` (origin), `iat`, `exp`, `email`, `origin`, and
+            `challenge_id` claims.
+
+    JWKS:
+      type: object
+      required: [keys]
+      properties:
+        keys:
+          type: array
+          items:
+            type: object
+            required: [kty, crv, alg, use, kid, x, y]
+            properties:
+              kty: { type: string, enum: [EC] }
+              crv: { type: string, enum: [P-256] }
+              alg: { type: string, enum: [ES256] }
+              use: { type: string, enum: [sig] }
+              kid: { type: string }
+              x:   { type: string, description: base64url big-endian X coordinate }
+              y:   { type: string, description: base64url big-endian Y coordinate }
+
+security:
+  - HMAC: []

@@ -1,0 +1,27 @@
+name: Documentation issue
+description: A page in the docs is wrong, misleading, missing, or unclear.
+title: "[docs] "
+labels: ["docs"]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Which page
+      description: URL under https://corezt.com/docs/ztxbas/… or path in the repo under `docs/`.
+      placeholder: "https://corezt.com/docs/ztxbas/concepts/origin-binding"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's wrong
+      description: Quote the sentence(s) that are wrong or unclear, and say what you expected.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix (optional)
+      description: A proposed rewrite, a missing link, a diagram idea — anything concrete helps.

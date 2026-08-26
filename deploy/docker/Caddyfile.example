@@ -1,0 +1,75 @@
+# Copy this to ./Caddyfile next to your docker-compose files and edit
+# the hostnames + basic-auth hash below before starting Caddy.
+#
+# Trust model recap:
+#   - ztxbas.example.com      → public API, safe to expose. HMAC-authed.
+#   - console.ztxbas.example  → admin console. Add basic-auth or an IP
+#                               allowlist (or both). This is the front
+#                               door to your tenant.
+
+{
+	# Uncomment for LE staging while iterating on config.
+	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+	email admin@example.com
+}
+
+# ---------------------------------------------------------------------------
+# Public API — HMAC-authed, safe to expose directly.
+# ---------------------------------------------------------------------------
+ztxbas.example.com {
+	encode zstd gzip
+
+	# Security headers (belt-and-braces; the app also sets these).
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		# Server header removed to avoid version fingerprinting.
+		-Server
+	}
+
+	reverse_proxy ztxbas:8443 {
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-For  {remote_host}
+	}
+}
+
+# ---------------------------------------------------------------------------
+# Admin console — public exposure requires an extra gate.
+# Pick ONE of the three approaches below. Do NOT expose the console with
+# no gate on the public internet.
+# ---------------------------------------------------------------------------
+console.ztxbas.example.com {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# --- Option 1: basic auth in front of the console -----------------------
+	# Generate a hash with: docker run --rm caddy caddy hash-password
+	basicauth {
+		# username  bcrypt-hash-here
+		admin $2a$14$REPLACE_ME_WITH_A_REAL_HASH
+	}
+
+	# --- Option 2: IP allowlist (uncomment + adjust CIDR) -------------------
+	# @not_allowed not remote_ip 203.0.113.0/24 198.51.100.42/32
+	# respond @not_allowed 403
+
+	# --- Option 3: mTLS (uncomment tls block, requires a client CA) ---------
+	# tls {
+	#     client_auth {
+	#         mode require_and_verify
+	#         trusted_ca_cert_file /etc/caddy/client-ca.crt
+	#     }
+	# }
+
+	reverse_proxy ztxbas:8080 {
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-For  {remote_host}
+	}
+}
