@@ -1,44 +1,60 @@
----
-sidebar_position: 2
-title: Getting started
----
-
 # Getting started
 
 This page takes you from zero to a verified JWT in about fifteen
-minutes. It uses the `docker run` smoke-test path — no TLS, ports on
-loopback, ephemeral SMTP — which is enough to see the whole flow end to
-end. For a real deployment (compose + Caddy, or Kubernetes),
-follow [`deploy/README.md`](https://github.com/corezt/ztxbas/blob/main/deploy/README.md)
-after you've kicked the tires here.
+minutes on your own machine. It's a **local demo, not a production
+deployment** — one `docker run` command with the mobile app on the
+same LAN, no TLS, no reverse proxy. For production recipes (self-
+terminated TLS, compose + Caddy with Let's Encrypt, or Kubernetes),
+see [`deploy/README.md`](https://github.com/corezt/ztxbas/blob/main/deploy/README.md)
+after you've walked through this.
 
 ## 1. Run ZTXBAS
 
 ZTXBAS ships as a signed container image at `ghcr.io/corezt/ztxbas`.
 The image is signed with cosign; verifying the signature is optional
-for a smoke test but recommended before any real install
-(see [deploy/README.md](https://github.com/corezt/ztxbas/blob/main/deploy/README.md#signed-release-artifacts)).
+for a demo but recommended before any real install
+(see [deploy/README.md](https://github.com/corezt/ztxbas/blob/main/deploy/README.md#verifying-image-signatures)).
 
-You'll need an SMTP relay reachable from the container — the enrollment
-step in section 3 sends a link by email. For a quick local run, a
-throwaway [MailHog](https://github.com/mailhog/MailHog) or
-[Mailpit](https://mailpit.axllent.org/) container works fine.
+You'll also need an SMTP relay reachable from the container — the
+enrollment step in section 3 sends a link by email.
+
+**Prep an env file.** Copy the shipped example and fill in a couple of
+values:
 
 ```bash
-docker run --rm \
-  -p 127.0.0.1:8443:8443 \
+cp env.txt .env
+```
+
+Find your machine's LAN IP (the phone must be able to reach it):
+
+```bash
+ip -4 addr show | grep -oP '(?<=inet\s)\d+\.\d+\.\d+\.\d+' | grep -v '^127\.'
+```
+
+Edit `.env` and set:
+
+```
+ZTXBAS_PUBLIC_URL=http://<lan-ip>:8443
+ZTXBAS_SMTP_HOST=smtp.example.com
+ZTXBAS_SMTP_PORT=587
+ZTXBAS_SMTP_USER=your-smtp-user
+ZTXBAS_SMTP_PASS=your-smtp-pass
+ZTXBAS_SMTP_FROM=ztxbas@yourdomain.com
+```
+
+`ZTXBAS_PUBLIC_URL` is baked into every enrollment link and QR code,
+so it has to be an address the phone can actually reach. Loopback
+won't work.
+
+**Run it:**
+
+```bash
+docker run --rm --name ztxbas \
+  --env-file .env \
+  -p <lan-ip>:8443:8443 \
   -p 127.0.0.1:8080:8080 \
   -p 9443:9443/udp \
   -v ztxbas-data:/var/lib/ztxbas \
-  -e ZTXBAS_PUBLIC_URL=http://127.0.0.1:8443 \
-  -e ZTXBAS_SMTP_HOST=smtp.example.com \
-  -e ZTXBAS_SMTP_PORT=587 \
-  -e ZTXBAS_SMTP_USER=user \
-  -e ZTXBAS_SMTP_PASS=pass \
-  -e ZTXBAS_SMTP_FROM=ztxbas@example.com \
-  -e ZTXBAS_CONSOLE_LISTEN_ADDR=0.0.0.0:8080 \
-  -e ZTXBAS_ALLOW_INSECURE_CONSOLE=1 \
-  --name ztxbas \
   --cap-drop ALL --security-opt no-new-privileges \
   --read-only --tmpfs /tmp:size=16m \
   ghcr.io/corezt/ztxbas:latest
@@ -46,24 +62,23 @@ docker run --rm \
 
 Three ports are involved:
 
-| Port      | Purpose                                            |
-|-----------|----------------------------------------------------|
-| 8443/tcp  | RP-facing API — your app / SDK calls this.         |
-| 8080/tcp  | Admin console (SPA + `/admin/api/v1`).             |
-| 9443/udp  | Mobile-app transport. **Publish directly** — this  |
-|           | is a custom framed protocol; HTTP proxies can't    |
-|           | forward it.                                        |
+| Port      | Bound to      | Purpose                                            |
+|-----------|---------------|----------------------------------------------------|
+| 8443/tcp  | LAN IP        | RP-facing API — your app / SDK calls this.         |
+| 8080/tcp  | Loopback      | Admin console                        .             |
+| 9443/udp  | All ifaces    | Mobile-app transport. **Publish directly** — this  |
+|           |               | is a custom framed protocol; HTTP proxies can't    |
+|           |               | forward it.                                        |
 
-For the smoke test the HTTP ports bind to loopback, so
-`ZTXBAS_ALLOW_INSECURE_CONSOLE=1` is safe. The mobile UDP port publishes
-on all interfaces because your phone needs to reach it — if you're only
-testing the API surface (curl, SDKs) without a phone, drop that
-mapping.
+The admin console stays on loopback because you open it in a browser
+on the same host. If you're SSH'd into a remote host, add
+`-L 8080:localhost:8080` to your SSH command and open
+<http://127.0.0.1:8080> locally.
 
 Health check:
 
 ```bash
-curl -s http://127.0.0.1:8443/health
+curl -s http://<lan-ip>:8443/health
 # {"status":"ok","version":"1.0.0"}
 ```
 
@@ -117,7 +132,7 @@ create challenge → poll → get a verified JWT back.
 ### Go
 
 ```go
-c, _ := ztxbas.New("http://127.0.0.1:8443", "app_a1b2c3d4e5", "5f6e7d8c9b0a...")
+c, _ := ztxbas.New("http://<lan-ip>:8443", "app_a1b2c3d4e5", "5f6e7d8c9b0a...")
 _, _ = c.RegisterUser(ctx, ztxbas.RegisterUserRequest{Email: "alice@example.com"})
 ch, _ := c.CreateChallenge(ctx, ztxbas.CreateChallengeRequest{
     UserEmail: "alice@example.com",
@@ -130,7 +145,7 @@ fmt.Println(claims.Email, claims.Origin)
 ### Node/TypeScript
 
 ```ts
-const c = new Client("http://127.0.0.1:8443", "app_a1b2c3d4e5", "5f6e7d8c9b0a...");
+const c = new Client("http://<lan-ip>:8443", "app_a1b2c3d4e5", "5f6e7d8c9b0a...");
 await c.registerUser({ email: "alice@example.com" });
 const ch = await c.createChallenge({
   user_email: "alice@example.com",
@@ -143,14 +158,14 @@ console.log(claims.email, claims.origin);
 ### Python
 
 ```python
-c = Client("http://127.0.0.1:8443", "app_a1b2c3d4e5", "5f6e7d8c9b0a...")
+c = Client("http://<lan-ip>:8443", "app_a1b2c3d4e5", "5f6e7d8c9b0a...")
 c.register_user("alice@example.com")
 ch = c.create_challenge("alice@example.com", "https://app.example.com")
 claims = c.poll_challenge(ch["challenge_id"])
 print(claims.email, claims.origin)
 ```
 
-For a real deployment, swap `http://127.0.0.1:8443` for your TLS
+For a real deployment, swap `http://<lan-ip>:8443` for your TLS
 front-end (`https://ztxbas.example.com`).
 
 ## 5. What just happened
