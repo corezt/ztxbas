@@ -1,8 +1,3 @@
----
-sidebar_position: 3
-title: Challenge lifecycle
----
-
 # Challenge lifecycle
 
 Every authentication goes through the same short state machine.
