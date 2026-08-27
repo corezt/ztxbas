@@ -1,8 +1,3 @@
----
-sidebar_position: 2
-title: Node / TypeScript SDK
----
-
 # Node / TypeScript SDK
 
 Idiomatic TypeScript client. Zero external runtime dependencies — uses
