@@ -76,6 +76,8 @@ Edit `.env` and set at minimum:
 ZTXBAS_PUBLIC_URL=https://ztxbas.example.com
 ZTXBAS_TLS_CERT=/certs/fullchain.pem
 ZTXBAS_TLS_KEY=/certs/privkey.pem
+ZTXBAS_CONSOLE_LISTEN_ADDR=0.0.0.0:8080
+ZTXBAS_ALLOW_INSECURE_CONSOLE=1
 ZTXBAS_SMTP_HOST=smtp.example.com
 ZTXBAS_SMTP_PORT=587
 ZTXBAS_SMTP_USER=your-smtp-user
@@ -88,6 +90,14 @@ ZTXBAS_TRUSTED_PROXIES=      # empty for bare Docker; no proxy in front
 and enrolled mobile devices all reach the server at. It's baked into
 enrollment links, QR codes, and JWT `iss` claims — a wrong value here
 silently breaks enrollment.
+
+`ZTXBAS_CONSOLE_LISTEN_ADDR=0.0.0.0:8080` binds the console inside
+the container to all interfaces so Docker's port mapping can reach it;
+`ZTXBAS_ALLOW_INSECURE_CONSOLE=1` tells the startup fail-safe that
+this is intentional. The console still isn't publicly exposed —
+`-p 127.0.0.1:8080:8080` in the docker command restricts it to host
+loopback; see [exposing the console](#exposing-the-admin-console) for
+how to reach it from another machine.
 
 **Run it:**
 
