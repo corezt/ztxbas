@@ -1,8 +1,3 @@
----
-sidebar_position: 4
-title: JWT verification
----
-
 # JWT verification
 
 After a user approves a challenge, ZTXBAS mints a short-lived ES256
