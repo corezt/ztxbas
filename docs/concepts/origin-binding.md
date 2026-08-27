@@ -1,8 +1,3 @@
----
-sidebar_position: 1
-title: Origin binding
----
-
 # Origin binding
 
 Origin binding is the single most important thing ZTXBAS does. It's
