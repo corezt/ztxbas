@@ -1,8 +1,3 @@
----
-sidebar_position: 10
-title: ZTXBAS vs ZTXGate
----
-
 # ZTXBAS vs ZTXGate
 
 Both products are from CoreZT and both help you prove who a user is
