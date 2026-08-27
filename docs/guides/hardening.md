@@ -1,8 +1,3 @@
----
-sidebar_position: 1
-title: Hardening guide
----
-
 # Hardening guide
 
 This page covers the ztxbas-specific settings that matter for a
