@@ -1,8 +1,3 @@
----
-sidebar_position: 1
-title: API overview
----
-
 # API overview
 
 The ZTXBAS public API is small on purpose. Ten endpoints across four
