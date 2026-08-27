@@ -1,8 +1,3 @@
----
-sidebar_position: 1
-title: Introduction
----
-
 # ZTXBAS
 
 **ZTXBAS** is a small, self-hosted server that mints short-lived,
