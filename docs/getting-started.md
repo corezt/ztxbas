@@ -35,6 +35,8 @@ Edit `.env` and set:
 
 ```
 ZTXBAS_PUBLIC_URL=http://<lan-ip>:8443
+ZTXBAS_CONSOLE_LISTEN_ADDR=0.0.0.0:8080
+ZTXBAS_ALLOW_INSECURE_CONSOLE=1
 ZTXBAS_SMTP_HOST=smtp.example.com
 ZTXBAS_SMTP_PORT=587
 ZTXBAS_SMTP_USER=your-smtp-user
@@ -45,6 +47,13 @@ ZTXBAS_SMTP_FROM=ztxbas@yourdomain.com
 `ZTXBAS_PUBLIC_URL` is baked into every enrollment link and QR code,
 so it has to be an address the phone can actually reach. Loopback
 won't work.
+
+`ZTXBAS_CONSOLE_LISTEN_ADDR=0.0.0.0:8080` binds the console inside
+the container to all interfaces so Docker's port mapping can reach it;
+`ZTXBAS_ALLOW_INSECURE_CONSOLE=1` tells the startup fail-safe that
+this is intentional. The console still isn't publicly exposed —
+`-p 127.0.0.1:8080:8080` in the docker command restricts it to host
+loopback.
 
 **Run it:**
 
