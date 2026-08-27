@@ -1,8 +1,3 @@
----
-sidebar_position: 2
-title: HMAC signing
----
-
 # HMAC request signing
 
 Every request to `/v1/*` is signed with HMAC-SHA256 using the
