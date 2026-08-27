@@ -1,8 +1,3 @@
----
-sidebar_position: 3
-title: Python SDK
----
-
 # Python SDK
 
 Thin, dependency-light Python client. Uses `cryptography` for ES256;
