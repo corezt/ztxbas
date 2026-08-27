@@ -1,9 +1,14 @@
 # Deploying ZTXBAS
 
-Three worked examples, in order of increasing production-readiness:
+Production recipes for running ZTXBAS. If you're evaluating ZTXBAS on
+your laptop and just want a verified JWT in fifteen minutes, follow
+the [quickstart](https://corezt.com/docs/ztxbas/getting-started)
+instead — it's a single-command LAN demo, not a real deployment.
 
-1. [`docker run`](#1-docker-run--kicking-the-tires) — kicking the tires.
-2. [`docker compose` + Caddy](#2-docker-compose--caddy--single-host-production) — single-host production.
+Three worked examples, in order of increasing operational complexity:
+
+1. [`docker run` — bare Docker](#1-docker-run--bare-docker) — one container, self-terminated TLS.
+2. [`docker compose` + Caddy](#2-docker-compose--caddy--single-host-production) — single-host with automatic Let's Encrypt.
 3. [Kubernetes](#3-kubernetes--multi-node) — multi-node.
 
 A separate section on [exposing the console](#exposing-the-admin-console)
@@ -50,54 +55,99 @@ release cycle.
 
 ---
 
-## 1. `docker run` — kicking the tires
+## 1. `docker run` — bare Docker
 
-Ten-minute path from a clean host to a working instance. No TLS — this
-is for smoke tests only. A named volume keeps the SQLite DB and the JWT
-signing key across container restarts; drop the `-v` line for a purely
-ephemeral run.
+One container, self-terminated TLS, no reverse proxy. Suitable for
+production when a full compose stack is overkill (single-app hosts,
+appliance-style deployments). For most other deployments, prefer
+[Section 2](#2-docker-compose--caddy--single-host-production) — it
+gives you automatic Let's Encrypt via Caddy in front of the console.
+
+**Prep an env file.** Copy the shipped example and fill in your
+production values:
 
 ```sh
-docker run --rm \
-  -p 127.0.0.1:8443:8443 \
+cp env.txt .env
+```
+
+Edit `.env` and set at minimum:
+
+```
+ZTXBAS_PUBLIC_URL=https://ztxbas.example.com
+ZTXBAS_TLS_CERT=/certs/fullchain.pem
+ZTXBAS_TLS_KEY=/certs/privkey.pem
+ZTXBAS_SMTP_HOST=smtp.example.com
+ZTXBAS_SMTP_PORT=587
+ZTXBAS_SMTP_USER=your-smtp-user
+ZTXBAS_SMTP_PASS=your-smtp-pass
+ZTXBAS_SMTP_FROM=ztxbas@example.com
+ZTXBAS_TRUSTED_PROXIES=      # empty for bare Docker; no proxy in front
+```
+
+`ZTXBAS_PUBLIC_URL` must be the public hostname the RP, the operator,
+and enrolled mobile devices all reach the server at. It's baked into
+enrollment links, QR codes, and JWT `iss` claims — a wrong value here
+silently breaks enrollment.
+
+**Run it:**
+
+```sh
+docker run -d --restart=unless-stopped --name ztxbas \
+  --env-file .env \
+  -p 8443:8443 \
   -p 127.0.0.1:8080:8080 \
   -p 9443:9443/udp \
   -v ztxbas-data:/var/lib/ztxbas \
-  -e ZTXBAS_PUBLIC_URL=http://127.0.0.1:8443 \
-  -e ZTXBAS_SMTP_HOST=smtp.example.com \
-  -e ZTXBAS_SMTP_PORT=587 \
-  -e ZTXBAS_SMTP_USER=user \
-  -e ZTXBAS_SMTP_PASS=pass \
-  -e ZTXBAS_SMTP_FROM=ztxbas@example.com \
-  -e ZTXBAS_CONSOLE_LISTEN_ADDR=0.0.0.0:8080 \
-  -e ZTXBAS_ALLOW_INSECURE_CONSOLE=1 \
+  -v /etc/letsencrypt/live/ztxbas.example.com:/certs:ro \
   --cap-drop ALL \
   --security-opt no-new-privileges \
   --read-only --tmpfs /tmp:size=16m \
   ghcr.io/corezt/ztxbas:latest
 ```
 
-`ZTXBAS_ALLOW_INSECURE_CONSOLE=1` acknowledges to the startup fail-safe
-that binding the console to `0.0.0.0` without TLS is intentional — safe
-here because the HTTP ports publish on loopback only. The mobile UDP
-port (9443) publishes on all host interfaces because enrolled devices
-need to reach it from off-host; drop the `9443` mapping for a pure
-API-only smoke test.
+Port bindings, one at a time:
+
+- **`8443/tcp`** on all interfaces — RP-facing HMAC-authed API, TLS
+  terminated by ZTXBAS itself using the mounted cert.
+- **`8080/tcp`** on loopback — admin console. See
+  [exposing the console](#exposing-the-admin-console) for the three
+  supported ways to make it reachable off-host (SSH tunnel, VPN, or
+  reverse proxy on a separate hostname).
+- **`9443/udp`** on all interfaces — mobile transport. Must be
+  reachable from enrolled phones over the public internet.
+
+The cert mount assumes Let's Encrypt via `certbot` on the host; adjust
+the source path for your issuer. Ownership matters: the container
+runs as UID 10001, so the mounted files must be readable by that UID.
+Certbot writes `0600 root:root` by default — either loosen to `0644`
+after each renewal (Certbot deploy hook) or copy to a directory
+world-readable by design.
 
 Grab the breakglass admin password from the logs:
 
 ```sh
-docker logs <container-id> 2>&1 | grep -i breakglass
+docker logs ztxbas 2>&1 | grep -i breakglass
 ```
 
-Log in at <http://127.0.0.1:8080>, rotate the password.
-
-Health probe:
+SSH-tunnel to reach the console:
 
 ```sh
-curl -s http://127.0.0.1:8443/health
+ssh -L 8080:localhost:8080 operator@ztxbas.example.com
+# then open http://localhost:8080 in your local browser
+```
+
+Rotate the breakglass password on first login.
+
+Health probe (from the host, no cert-chain check):
+
+```sh
+curl -sk https://localhost:8443/health
 # {"status":"ok","version":"1.0.0"}
 ```
+
+Renewal reminder: whichever cert issuer you use, wire the renewal into
+a `docker kill --signal=SIGHUP ztxbas` or `docker restart ztxbas` so
+the server picks up the new cert without operator intervention.
 
 ---
 
