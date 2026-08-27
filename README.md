@@ -59,17 +59,7 @@ enroll → challenge → verify flow in about 30 lines.
 
 ## Documentation
 
-Full documentation is at <https://corezt.com/docs/ztxbas>. Key pages:
-
-- [Getting started](https://corezt.com/docs/ztxbas/getting-started)
-- [Origin binding](https://corezt.com/docs/ztxbas/concepts/origin-binding)
-- [HMAC signing](https://corezt.com/docs/ztxbas/concepts/hmac-signing)
-- [JWT verification](https://corezt.com/docs/ztxbas/concepts/jwt-verification)
-- [Hardening guide](https://corezt.com/docs/ztxbas/guides/hardening)
-- [How ZTXBAS compares to ZTXGate](https://corezt.com/docs/ztxbas/vs-ztxgate)
-
-The public API surface is documented in
-[`api/openapi.yaml`](api/openapi.yaml).
+See docs folder for full documentation.
 
 ## Support and maintenance
 
