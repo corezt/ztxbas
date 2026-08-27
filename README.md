@@ -12,7 +12,7 @@ registered to the requesting application.
 
 - **No signup, no license, no telemetry.** The binary runs on your
   infrastructure. Nothing calls home.
-- **Ten minutes to a working demo.** See [Getting started](https://corezt.com/docs/ztxbas/getting-started).
+- **Ten minutes to a working demo.** See [Getting started](docs/getting-started).
 - **Single container, SQLite state.** No external database, no message
   broker, no separate admin service.
 - **Three official SDKs.** Go, Node/TypeScript, Python — hand-written,
