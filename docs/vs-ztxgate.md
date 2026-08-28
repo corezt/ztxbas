@@ -90,5 +90,4 @@ Okta Verify Push and Duo Push). You can pick which one applies per
 policy.
 
 If you're an existing ZTXBAS integrator and later adopt ZTXGate, your
-users don't need to re-enroll — the same biometric enrollment carries
-across.
+users don't need a new mobile app.
