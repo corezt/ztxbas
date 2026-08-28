@@ -38,7 +38,7 @@ and Kubernetes — are in [`deploy/README.md`](deploy/README.md).
 
 ## Mobile app
 
-The same CoreZT mobile app is used by both ZTXBAS and ZTXGate.
+The same ZTXBAS Authenticator mobile app is used by both ZTXBAS and ZTXGate.
 
 - **iOS** — <https://apps.apple.com/app/id6763044882>
 - **Android** — <https://play.google.com/store/apps/details?id=com.corezt.ztxbas>
