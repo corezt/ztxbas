@@ -211,13 +211,6 @@ when:
 Never set `ZTXBAS_ALLOW_INSECURE_CONSOLE=1` on a container whose
 console port is published to `0.0.0.0` without a proxy in front.
 
-**Optional: biometric protection on the console.** In the console's
-Setup screen, enable *"Protect this console with ZTXBAS biometric
-auth?"*. This walks the admin through enrolling their phone as the
-console's protected user; every subsequent login requires a push
-approval on the phone in addition to the password. Recommended for
-any instance reachable off-host.
-
 ## 7. Reverse proxy hygiene
 
 If ztxbas sits behind Caddy / nginx / a load balancer, tell it who to
