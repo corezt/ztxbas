@@ -170,9 +170,7 @@ below TLS 1.2 explicitly.
 ## 6. Exposing the admin console safely
 
 The admin console at port 8080 is the single most sensitive surface on
-your ztxbas instance. It has no MFA out of the box (though see the
-biometric-protection option below). Three supported paths, in
-decreasing order of safety:
+your ztxbas instance. Three supported paths, in decreasing order of safety:
 
 **A. Loopback + SSH tunnel (safest).** Leave `ZTXBAS_CONSOLE_LISTEN_ADDR`
 at its default (`127.0.0.1:8080`). Reach it from your laptop with:
