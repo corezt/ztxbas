@@ -80,7 +80,7 @@ Typical use cases:
 - Meet SOC 2, HIPAA, or PCI-DSS access controls without months of
   rollout.
 
-Learn more at **[ztxgate](https://corezt.com/ztxgate)**.
+Learn more at **[ZTXGate](https://corezt.com/ztxgate)**.
 
 ## Can I use both?
 
